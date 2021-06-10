@@ -82,7 +82,7 @@ class Comment(db.Model):
 db.create_all()
 # # ############################################################################
 
-# user1 = User(email="m@gmail.com",
+# user1 = User(email="mbpod10@gmail.com",
 #              name="Brock",
 #              password=generate_password_hash(
 #                  "123",
