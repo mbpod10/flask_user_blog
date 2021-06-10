@@ -19,7 +19,7 @@ load_dotenv()
 
 app = Flask(__name__)
 
-app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY", '.env/SECRET_KEY')
+app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY", 'SECRET_KEY')
 app.config['GMAIL_EMAIL'] = os.environ.get('GMAIL_EMAIL')
 app.config['GMAIL_PASSWORD'] = os.environ.get('GMAIL_PASSWORD')
 app.config['YAHOO_EMAIL'] = os.environ.get('YAHOO_EMAIL')
@@ -33,7 +33,7 @@ Bootstrap(app)
 #     "DATABASE_URL", 'sqlite:///blog.db')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
-    ".env/DATABASE_URL", 'sqlite:///blog.db')
+    "DATABASE_URL1", 'sqlite:///blog.db')
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
@@ -263,6 +263,7 @@ def contact():
         db.session.commit()
 
         pprint(app.config)
+        pprint(os.environ)
 
         with smtplib.SMTP(app.config['YAHOO_EMAIL'], port=587) as connection:
             connection.starttls()
