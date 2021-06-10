@@ -1,3 +1,4 @@
+from pprint import pprint
 from functools import wraps
 from flask import Flask, render_template, redirect, url_for, flash, abort, request
 from flask_bootstrap import Bootstrap
@@ -11,25 +12,18 @@ from forms import CreatePostForm, RegisterForm, LoginForm, CommentForm
 from flask_gravatar import Gravatar
 import os
 import smtplib
-from pprint import pprint
+from dotenv import load_dotenv
 
-yahoo = "smtp.mail.yahoo.com"
-gmail = "smtp.gmail.com"
-gmail_password = "Dividends10@"
-gmail_email = "darmedes@gmail.com"
-yahoo_email = "darmedes@yahoo.com"
-port = 587
-yahoo_pass = "hiqqzsaqtirswpgp"
+load_dotenv()
 
-# from seed import db, User, BlogPost, Comment
 
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY", '.env/SECRET_KEY')
-app.config['GMAIL_EMAIL'] = os.environ.get('.env/GMAIL_EMAIL')
-app.config['GMAIL_PASSWORD'] = os.environ.get('.env/GMAIL_PASSWORD')
-app.config['YAHOO_EMAIL'] = os.environ.get('.env/YAHOO_EMAIL')
-app.config['YAHOO_PASSWORD'] = os.environ.get('.env/YAHOO_PASSWORD')
+app.config['GMAIL_EMAIL'] = os.environ.get('GMAIL_EMAIL')
+app.config['GMAIL_PASSWORD'] = os.environ.get('GMAIL_PASSWORD')
+app.config['YAHOO_EMAIL'] = os.environ.get('YAHOO_EMAIL')
+app.config['YAHOO_PASSWORD'] = os.environ.get('YAHOO_PASSWORD')
 
 ckeditor = CKEditor(app)
 Bootstrap(app)
@@ -270,24 +264,15 @@ def contact():
 
         pprint(app.config)
 
-        with smtplib.SMTP(yahoo, port=587) as connection:
+        with smtplib.SMTP(app.config['YAHOO_EMAIL'], port=587) as connection:
             connection.starttls()
             connection.login(
                 user=app.config['YAHOO_EMAIL'], password=app.config['YAHOO_PASSWORD'])
             connection.sendmail(
                 from_addr=app.config['YAHOO_EMAIL'],
                 to_addrs=app.config['GMAIL_EMAIL'],
-                msg=f"Subject:{new_message.name}\n\n{new_message.message}"
+                msg=f"Subject:{new_message.name} Contacted You via Flask App\n\n{new_message.message}\n\n{new_message.phone_number}\n\n{new_message.email}"
             )
-        # with smtplib.SMTP(yahoo, port=587) as connection:
-        #     connection.starttls()
-        #     connection.login(
-        #         user=app.config['YAHOO_EMAIL'], password=yahoo_pass)
-        #     connection.sendmail(
-        #         from_addr=yahoo_email,
-        #         to_addrs=gmail_email,
-        #         msg=f"Subject:{new_message.name}\n\n{new_message.message}\n\n{new_message.phone_number}\n\n{new_message.email}"
-        #     )
         return render_template("contact.html", sent=True)
 
     return render_template("contact.html", sent=False)
