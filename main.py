@@ -1,5 +1,5 @@
 from functools import wraps
-from flask import Flask, render_template, redirect, url_for, flash, abort
+from flask import Flask, render_template, redirect, url_for, flash, abort, request
 from flask_bootstrap import Bootstrap
 from flask_ckeditor import CKEditor
 from datetime import date
@@ -10,11 +10,27 @@ from flask_login import UserMixin, login_user, LoginManager, login_required, cur
 from forms import CreatePostForm, RegisterForm, LoginForm, CommentForm
 from flask_gravatar import Gravatar
 import os
+import smtplib
+from pprint import pprint
+
+yahoo = "smtp.mail.yahoo.com"
+gmail = "smtp.gmail.com"
+gmail_password = "Dividends10@"
+gmail_email = "darmedes@gmail.com"
+yahoo_email = "darmedes@yahoo.com"
+port = 587
+yahoo_pass = "hiqqzsaqtirswpgp"
+
 # from seed import db, User, BlogPost, Comment
 
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY", '.env/SECRET_KEY')
+app.config['GMAIL_EMAIL'] = os.environ.get('.env/GMAIL_EMAIL')
+app.config['GMAIL_PASSWORD'] = os.environ.get('.env/GMAIL_PASSWORD')
+app.config['YAHOO_EMAIL'] = os.environ.get('.env/YAHOO_EMAIL')
+app.config['YAHOO_PASSWORD'] = os.environ.get('.env/YAHOO_PASSWORD')
+
 ckeditor = CKEditor(app)
 Bootstrap(app)
 
@@ -79,66 +95,17 @@ class Comment(db.Model):
     parent_post = relationship("BlogPost", back_populates="comments")
 
 
+class Message(db.Model):
+    __tablename__ = "messages"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(250), unique=False, nullable=False)
+    email = db.Column(db.String(250), nullable=False)
+    phone_number = db.Column(db.String(250), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+
+
 db.create_all()
-# # ############################################################################
 
-# user1 = User(email="mbpod10@gmail.com",
-#              name="Brock",
-#              password=generate_password_hash(
-#                  "123",
-#                  method='pbkdf2:sha256',
-#                  salt_length=8),
-#              )
-
-# db.session.add(user1)
-
-# user2 = User(email="t@gmail.com",
-#              name="Tipszy",
-#              password=generate_password_hash(
-#                  "123",
-#                  method='pbkdf2:sha256',
-#                  salt_length=8),
-#              )
-
-# db.session.add(user2)
-
-# blog1 = BlogPost(
-#     title="My First Post",
-#     subtitle="I Hate This",
-#     date="12/05/2020",
-#     body="Blah",
-#     img_url="https://victoria.mediaplanet.com/app/uploads/sites/102/2019/07/mainimage-26.jpg",
-#     author_id=1
-# )
-# db.session.add(blog1)
-
-# blog2 = BlogPost(
-#     title="Let's Go",
-#     subtitle="I Love This",
-#     date="12/05/2021",
-#     body="The woods, the woods, the bridge of souls to reach!",
-#     img_url="https://www.carbonbrief.org/wp-content/uploads/2020/06/yawning-lion-south-africa-1550x804.jpg",
-#     author_id=2
-# )
-# db.session.add(blog2)
-
-# comment1 = Comment(
-#     body="I really like this post!",
-#     author_id=2,
-#     post_id=1
-# )
-# db.session.add(comment1)
-
-# comment2 = Comment(
-#     body="Reallly Good!",
-#     author_id=2,
-#     post_id=1
-# )
-
-# db.session.add(comment2)
-# db.session.commit()
-
-##########################################################################
 login_manager = LoginManager()
 login_manager.init_app(app)
 
@@ -239,11 +206,6 @@ def about():
     return render_template("about.html")
 
 
-@app.route("/contact")
-def contact():
-    return render_template("contact.html")
-
-
 @app.route("/new-post", methods=['POST', 'GET'])
 @admin_only
 def add_new_post():
@@ -293,9 +255,42 @@ def delete_post(post_id):
     return redirect(url_for('get_all_posts'))
 
 
-# @app.route("/comment/<int:post_id>", methods=['GET', 'POST'])
-# def make_comment(post_id):
-#     pass
+@app.route("/contact", methods=['GET', 'POST'])
+def contact():
+    if request.method == 'POST':
+
+        new_message = Message(
+            name=request.form['name'],
+            email=request.form['email'],
+            phone_number=request.form['phone'],
+            message=request.form['message']
+        )
+        db.session.add(new_message)
+        db.session.commit()
+
+        pprint(app.config)
+
+        with smtplib.SMTP(yahoo, port=587) as connection:
+            connection.starttls()
+            connection.login(
+                user=app.config['YAHOO_EMAIL'], password=app.config['YAHOO_PASSWORD'])
+            connection.sendmail(
+                from_addr=app.config['YAHOO_EMAIL'],
+                to_addrs=app.config['GMAIL_EMAIL'],
+                msg=f"Subject:{new_message.name}\n\n{new_message.message}"
+            )
+        # with smtplib.SMTP(yahoo, port=587) as connection:
+        #     connection.starttls()
+        #     connection.login(
+        #         user=app.config['YAHOO_EMAIL'], password=yahoo_pass)
+        #     connection.sendmail(
+        #         from_addr=yahoo_email,
+        #         to_addrs=gmail_email,
+        #         msg=f"Subject:{new_message.name}\n\n{new_message.message}\n\n{new_message.phone_number}\n\n{new_message.email}"
+        #     )
+        return render_template("contact.html", sent=True)
+
+    return render_template("contact.html", sent=False)
 
 
 if __name__ == "__main__":
