@@ -16,6 +16,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+yahoo = "smtp.mail.yahoo.com"
+gmail = "smtp.gmail.com"
+
 
 app = Flask(__name__)
 
@@ -28,9 +31,6 @@ app.config['YAHOO_PASSWORD'] = os.environ.get('YAHOO_PASSWORD')
 ckeditor = CKEditor(app)
 Bootstrap(app)
 
-# CONNECT TO DB
-# app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
-#     "DATABASE_URL", 'sqlite:///blog.db')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
     "DATABASE_URL1", 'sqlite:///blog.db')
@@ -265,7 +265,7 @@ def contact():
         pprint(app.config)
         pprint(os.environ)
 
-        with smtplib.SMTP(app.config['YAHOO_EMAIL'], port=587) as connection:
+        with smtplib.SMTP(yahoo, port=587) as connection:
             connection.starttls()
             connection.login(
                 user=app.config['YAHOO_EMAIL'], password=app.config['YAHOO_PASSWORD'])
